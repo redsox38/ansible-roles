@@ -41,6 +41,7 @@ receivers:
         - name: "{{alertmanager_opsgenie_team}}"
           type: 'team'
       priority: '{% raw %}{{ if .CommonAnnotations.priority }}{{ .CommonAnnotations.priority}}{{ else }}P3{{ end }}{% endraw %}'
+      description: '{{ .CommonAnnotations.description }}'
 {% endif %}
 {% if alertmanager_opsgenie_heartbeat_name %}
 - name: heartbeat
