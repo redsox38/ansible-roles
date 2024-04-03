@@ -268,9 +268,23 @@
     path: "{{item}}"
     owner: slurm
     group: slurm
+    mode: "0755"
+  loop:
+    - /var/log/slurm
+  tags:
+    - slurm
+    - slurm_install_controller
+    - slurm_install_slurmd
+
+- name: Create root owned slurm directories
+  ansible.builtin.file:
+    state: directory
+    path: "{{item}}"
+    owner: root
+    group: root
+    mode: "0755"
   loop:
     - /var/run/slurm
-    - /var/log/slurm
   tags:
     - slurm
     - slurm_install_controller
