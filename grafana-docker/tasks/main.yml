@@ -1,0 +1,58 @@
+---
+# tasks file for grafana-docker
+- name: Create grafana app directory
+  file:
+    path: "{{grafana_root_dir}}"
+    state: directory
+    owner: 472
+    group: 472
+  tags:
+    - grafana-docker
+
+
+- name: Set traefik_labels
+  ansible.builtin.set_fact:
+    grafana_docker_labels: "{{ grafana_docker_labels | default({}) | combine ({ item.key : item.value }) }}"
+  with_items:
+    - { 'key': 'traefik.enable' , 'value': "true" }
+    - { 'key': 'traefik.http.services.grafana.loadbalancer.server.port' , 'value': "3000" }
+    - { 'key': 'traefik.http.routers.grafana.entrypoints' , 'value': "websecure" }
+    - { 'key': 'traefik.http.routers.grafana.rule' , 'value': "Host(`{{grafana_fqdn}}`)" }
+    - { 'key': 'traefik.http.routers.grafana.tls' , 'value': "true" }
+    - { 'key': 'traefik.http.routers.grafana.tls.certresolver' , 'value': 'letsencrypt' }
+    - { 'key': 'traefik.docker.network' , 'value': "{{grafana_traefik_network}}" }
+  when: grafana_traefik_enable
+  tags:
+    - grafana-docker
+
+- debug:
+    msg: "{{grafana_docker_labels}}"
+  tags:
+    - grafana-docker
+
+- name: Set labels
+  ansible.builtin.set_fact:
+    grafana_docker_networks:
+      - name: "{{grafana_traefik_network}}"
+  when: grafana_traefik_enable
+  tags:
+    - grafana-docker
+
+
+- name: Create grafana container
+  community.docker.docker_container:
+    name: "grafana"
+    image: "grafana/grafana:{{grafana_container_version}}"
+    hostname: "grafana"
+    restart_policy: unless-stopped
+    network_mode: 'default'
+    networks: "{{grafana_docker_networks}}"
+    env:
+      GF_SERVER_ROOT_URL: "https://{{ grafana_fqdn }}"
+    volumes:
+      - "{{grafana_root_dir}}/lib:/var/lib/grafana"
+    labels: "{{grafana_docker_labels}}"
+  tags:
+    - grafana-docker
+
+
