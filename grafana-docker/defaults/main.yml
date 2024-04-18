@@ -1,0 +1,14 @@
+---
+# defaults file for grafana-server
+grafana_root_dir: /data/apps/grafana
+
+# Only needed for multiple instances running on the same host
+grafana_docker_suffix: ""
+
+# Image versions
+grafana_container_version: "latest"
+
+grafana_admin_password: '{{ undef(hint("You must define your Grafana admin password"))}}'
+grafana_traefik_enable: true
+grafana_traefik_network: traefik_proxy
+grafana_fqdn: "grafana.datainscience.com"

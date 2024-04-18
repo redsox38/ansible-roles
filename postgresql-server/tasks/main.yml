@@ -41,6 +41,7 @@
     networks: "{{postgres_networks}}"
     hostname: "{{postgres_container_name}}"
     container_default_behavior: 'no_defaults'
+    user: "{{ postgres_user_id }}"
     env:
       POSTGRES_PASSWORD: "{{postgres_password}}" 
       POSTGRES_DB: "{{postgres_database}}" 
@@ -113,23 +114,6 @@
     regexp: "^archive_command"
     insertbefore: "^#archive_command"
     line: "archive_command = 'test ! -f /archive/%f && cp %p /archive/%f'"
-  when: postgres_enable_pitr
-  tags:
-    - postgresql
-
-- name: Create cron job for backup rotation
-  include_role:
-    name: cronjob
-  vars:
-    cronjob_cron_name: "Postgresql backup for {{ansible_hostname}} at {{postgres_data_dir}}"
-    cronjob_description: "Weekly cronjob for Postgresql backup for {{ansible_hostname}}"
-    cronjob_job: "{{postgres_pitr_cron_command}}" 
-    cronjob_minute: '0'
-    cronjob_hour: '0'
-    cronjob_weekday: '1'
-    cronjob_tags:
-      - postgresql
-      - backup
   when: postgres_enable_pitr
   tags:
     - postgresql

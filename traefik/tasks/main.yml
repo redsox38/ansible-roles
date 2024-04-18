@@ -55,9 +55,6 @@
       - /var/run/docker.sock:/var/run/docker.sock
       - "{{traefik_data_dir}}/traefik.toml:/etc/traefik/traefik.toml"
       - "{{traefik_data_dir}}/acme:/etc/traefik/acme"
-    log_options:
-      max-size: "10m"
-      max-file: "3"
     networks:
       - name: traefik_proxy
     ports:
