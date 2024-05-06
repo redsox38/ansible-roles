@@ -10,6 +10,11 @@ if ( -f $SPACK_ROOT/share/spack/setup-env.sh ) then
     {% for default_module in spack_default_module_paths %}
     module use {{default_module}}
     {% endfor %}
+
+    {% for default_module in spack_default_modules %}
+    module load {{ default_module }}
+    {% endfor %}
+
 endif
 
 if ( ! $?__Init_Default_Modules )  then

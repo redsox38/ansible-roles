@@ -14,15 +14,15 @@
 
 - name: Install required packages
   ansible.builtin.package:
-    name: "{{item}}"
+    name: "{{ item }}"
     state: present
   when: spack_root_host | bool
-  loop: "{{spack_required_packages}}"
+  loop: "{{ spack_required_packages }}"
   tags:
     - spack
 
 - name: Set git config for manyFiles
-  git_config:
+  community.general.git_config:
     name: feature.manyFiles
     scope: global
     value: "true"
@@ -30,31 +30,37 @@
   tags:
     - spack
 
-- name: clone spack repository
-  git:
-    repo: "{{spack_repo}}"
-    dest: "{{spack_root}}"
-    version: "{{spack_version}}"
+- name: Clone spack repository
+  ansible.builtin.git:
+    repo: "{{ spack_repo }}"
+    dest: "{{ spack_root }}"
+    version: "{{ spack_version }}"
   when: spack_root_host | bool
   tags:
     - spack
 
 - name: Copy spack sh config
-  template:  
+  ansible.builtin.template:
     src: templates/zz-spack.sh
     dest: /etc/profile.d/zz-spack.sh
+    owner: root
+    group: root
+    mode: "0644"
   tags:
     - spack
 
-- name: copy spack csh config
-  template:  
+- name: Copy spack csh config
+  ansible.builtin.template:
     src: templates/zz-spack.csh
     dest: /etc/profile.d/zz-spack.csh
+    owner: root
+    group: root
+    mode: "0644"
   tags:
     - spack
 
-- name: enable lmod bash
-  lineinfile:
+- name: Enable lmod bash
+  ansible.builtin.lineinfile:
     path: /etc/sysconfig/modules/lmod/cm-lmod-init.sh
     regexp: ENABLE_LMOD
     line: "export ENABLE_LMOD=1"
@@ -62,8 +68,8 @@
   tags:
     - spack
 
-- name: enable lmod csh
-  lineinfile:
+- name: Enable lmod csh
+  ansible.builtin.lineinfile:
     path: /etc/sysconfig/modules/lmod/cm-lmod-init.csh
     regexp: ENABLE_LMOD
     line: 'setenv ENABLE_LMOD "1"'
@@ -75,10 +81,13 @@
   ansible.builtin.copy:
     content: |
       config:
-        {{ spack_config_config_yaml | to_nice_yaml(indent=2, sort_keys=False) | indent(2,false) }}
-    dest: "{{spack_root}}/etc/spack/config.yaml"
-    backup: yes
+        {{ spack_config_config_yaml | to_nice_yaml(indent=2, sort_keys=False) | indent(2, false) }}
+    dest: "{{ spack_root }}/etc/spack/config.yaml"
+    backup: true
     force: true
+    owner: root
+    group: root
+    mode: "0644"
   when:
     - spack_root_host | bool
     - spack_config_config_yaml
@@ -89,11 +98,14 @@
   ansible.builtin.copy:
     content: |
       modules:
-        {{ spack_config_modules_yaml | to_nice_yaml(indent=2, sort_keys=False) | indent(2,false) }}
-    dest: "{{spack_root}}/etc/spack/modules.yaml"
-    backup: yes
+        {{ spack_config_modules_yaml | to_nice_yaml(indent=2, sort_keys=False) | indent(2, false) }}
+    dest: "{{ spack_root }}/etc/spack/modules.yaml"
+    backup: true
     force: true
-  when: 
+    owner: root
+    group: root
+    mode: "0644"
+  when:
     - spack_root_host | bool
     - spack_config_modules_yaml
   tags:
@@ -103,9 +115,12 @@
   ansible.builtin.copy:
     content: |
       packages:
-        {{ spack_config_packages_yaml | to_nice_yaml(indent=2, sort_keys=False) | indent(2,false) }}
-    dest: "{{spack_root}}/etc/spack/packages.yaml"
+        {{ spack_config_packages_yaml | to_nice_yaml(indent=2, sort_keys=False) | indent(2, false) }}
+    dest: "{{ spack_root }}/etc/spack/packages.yaml"
     force: true
+    owner: root
+    group: root
+    mode: "0644"
   when:
     - spack_root_host | bool
     - spack_config_packages_yaml
@@ -116,9 +131,12 @@
   ansible.builtin.copy:
     content: |
       compilers:
-        {{ spack_config_compilers_yaml | to_nice_yaml(indent=2, sort_keys=False) | indent(2,false) }}
-    dest: "{{spack_root}}/etc/spack/compilers.yaml"
+        {{ spack_config_compilers_yaml | to_nice_yaml(indent=2, sort_keys=False) | indent(2, false) }}
+    dest: "{{ spack_root }}/etc/spack/compilers.yaml"
     force: true
+    owner: root
+    group: root
+    mode: "0644"
   when:
     - spack_root_host | bool
     - spack_config_compilers_yaml
@@ -128,7 +146,10 @@
 - name: Copy StdEnv.lua file if default modules enabled
   ansible.builtin.template:
     src: "templates/StdEnv.lua.j2"
-    dest: "{{spack_default_stdenv_path}}"
+    dest: "{{ spack_default_stdenv_path }}"
+    owner: root
+    group: root
+    mode: "0644"
   when:
     - spack_root_host | bool
     - spack_default_modules
