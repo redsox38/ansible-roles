@@ -93,6 +93,7 @@
       DB_PASSWORD: "{{netbox_postgres_password}}"
       DB_HOST: "{{netbox_postgres_container_name}}"
       REDIS_HOST: "{{netbox_redis_container_name}}"
+      METRICS_ENABLED: 'true'
     volumes:
       - "{{netbox_config_dir}}:/config"
     labels: "{{netbox_docker_labels}}"
