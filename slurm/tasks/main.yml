@@ -10,11 +10,7 @@
       paths:
         - "{{ role_path }}/vars"
   tags:
-    - slurm
-    - slurm_install_controller
-    - slurm_install_slurmd
-    - slurm_firewall
-    - slurm_configure
+    - always
 
 - name: Set slurm download version
   ansible.builtin.set_fact:

@@ -69,6 +69,4 @@
     group: "{{slurm_gid}}"
     mode: "0600"
   tags:
-    - munge
-
-
+    - slurm_install_restd
