@@ -1,12 +1,64 @@
-- name: Create configuration file
+- name: Make local tempfile for slurm.conf templating # ensures simultaneous runs don't clobber each other
+  ansible.builtin.tempfile:
+  register: _slurm_conf_tmpfile
+  delegate_to: localhost
+  changed_when: false # so molecule doesn't fail
+  tags:
+    - slurm
+    - slurm_configure
+
+- name: Template slurmctld configuration file
   ansible.builtin.template:
     src: templates/slurm.conf.j2
+    dest: "{{ _slurm_conf_tmpfile.path }}"
+    lstrip_blocks: true
+    mode: "0644"
+  notify:
+    - Restart slurmctld
+  delegate_to: localhost
+  changed_when: false # so molecule doesn't fail
+  tags:
+    - slurm
+    - slurm_configure
+
+- name: Customize slurm.conf
+  community.general.ini_file:
+    path: "{{ _slurm_conf_tmpfile.path }}"
+    option: "{{ item.key }}"
+    section: ''
+    value: "{{ (item.value | join(',')) if (item.value is sequence and item.value is not string) else item.value }}"
+    no_extra_spaces: true
+    create: false
+    mode: "0644"
+  loop: "{{ slurm_conf_extra | dict2items }}"
+  delegate_to: localhost
+  changed_when: false # so molecule doesn't fail
+  tags:
+    - slurm
+    - slurm_configure
+
+- name: Create slurm.conf
+  ansible.builtin.copy:
+    src: "{{ _slurm_conf_tmpfile.path }}"
     dest: /etc/slurm/slurm.conf
     owner: root
     group: root
     mode: "0644"
   notify:
     - Restart slurmctld
+  register: slurm_conf
+  tags:
+    - slurm
+    - slurm_configure
+
+- name: Remove local tempfile for slurm.conf templating
+  ansible.builtin.file:
+    path: "{{ _slurm_conf_tmpfile.path }}"
+    state: absent
+  when: _slurm_conf_tmpfile.path is defined
+  delegate_to: localhost
+  changed_when: false # so molecule doesn't fail
+  become: false
   tags:
     - slurm
     - slurm_configure

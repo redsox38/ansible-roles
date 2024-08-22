@@ -24,6 +24,10 @@
     slurm_groups_allowed: [root, wheel]
     slurm_enable_pmix: true
     slurm_cgroup_ignore_systemd: true
+    slurm_conf_extra:
+      DebugFlags: Backfill
+    slurmdbd_conf_extra:
+      ArchiveDir: '/tmp/'
   tasks:
     - name: Create restd user
       ansible.builtin.user:

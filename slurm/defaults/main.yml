@@ -127,3 +127,6 @@ slurm_enable_pmix: true
 slurm_pmix_version: 5.0.1
 
 slurm_force_install: false
+
+slurm_conf_extra: {}
+slurmdbd_conf_extra: {}

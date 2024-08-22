@@ -18,9 +18,46 @@
     - slurm
     - slurm_install_controller
 
-- name: Create slurmdbd configuration file
+- name: Make local tempfile for slurmdbd.conf templating # ensures simultaneous runs don't clobber each other
+  ansible.builtin.tempfile:
+  register: _slurmdbd_conf_tmpfile
+  delegate_to: localhost
+  changed_when: false # so molecule doesn't fail
+  tags:
+    - slurm
+    - slurm_configure
+
+- name: Template slurmdbd configuration file
   ansible.builtin.template:
     src: templates/slurmdbd.conf.j2
+    dest: "{{ _slurmdbd_conf_tmpfile.path }}"
+    lstrip_blocks: true
+    mode: "0600"
+  delegate_to: localhost
+  changed_when: false # so molecule doesn't fail
+  tags:
+    - slurm
+    - slurm_configure
+
+- name: Customize slurmdbd.conf
+  community.general.ini_file:
+    path: "{{ _slurmdbd_conf_tmpfile.path }}"
+    option: "{{ item.key }}"
+    section: ''
+    value: "{{ (item.value | join(',')) if (item.value is sequence and item.value is not string) else item.value }}"
+    no_extra_spaces: true
+    create: false
+    mode: "0644"
+  loop: "{{ slurmdbd_conf_extra | dict2items }}"
+  delegate_to: localhost
+  changed_when: false # so molecule doesn't fail
+  tags:
+    - slurm
+    - slurm_configure
+
+- name: Create slurmdbd.conf
+  ansible.builtin.copy:
+    src: "{{ _slurmdbd_conf_tmpfile.path }}"
     dest: /etc/slurm/slurmdbd.conf
     owner: slurm
     group: slurm
@@ -31,7 +68,20 @@
     - slurm
     - slurm_configure
 
-- name: create slurmdbd service file
+- name: Remove local tempfile for slurmdbd.conf templating
+  ansible.builtin.file:
+    path: "{{ _slurmdbd_conf_tmpfile.path }}"
+    state: absent
+  when: _slurmdbd_conf_tmpfile.path is defined
+  delegate_to: localhost
+  changed_when: false # so molecule doesn't fail
+  become: false
+  tags:
+    - slurm
+    - slurm_configure
+
+
+- name: Create slurmdbd service file
   ansible.builtin.template:
     src: templates/slurmdbd.service.j2
     dest: /etc/systemd/system/slurmdbd.service
@@ -50,5 +100,3 @@
   tags:
     - slurm
     - slurm_install_controller
-
-
